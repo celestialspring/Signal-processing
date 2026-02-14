@@ -2,7 +2,7 @@
 """
 Created on Fri Feb 13 10:21:42 2026
 
-@author: SM.
+@author: SM
 """
 import os
 import numpy as np
