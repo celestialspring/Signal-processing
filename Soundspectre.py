@@ -33,7 +33,7 @@ class Soundspectre():
         (
             self.audio_samples,
             self.audio_duration,
-            self.time_spacing,
+            self.time_period,
             self.freq_spacing,
             ) = self.fourier_params()
         self.window_data = self.window_filter('hanning', self.data,None)
@@ -77,7 +77,7 @@ class Soundspectre():
             Length of audio data
         audio_duration : 
             Length of signal in seconds
-        time_spacing : TYPE
+        time_period : TYPE
             the spacing between sampled points in time
         freq_spacing : TYPE
             the frequency resolution possible 
@@ -85,10 +85,10 @@ class Soundspectre():
         '''
         audio_samplelength = len(self.data)
         audio_duration = audio_samplelength/self.orig_samplerate
-        time_spacing = audio_duration/audio_samplelength
+        time_period = audio_duration/audio_samplelength
         freq_spacing = 1/audio_duration
         
-        return audio_samplelength, audio_duration, time_spacing, freq_spacing
+        return audio_samplelength, audio_duration, time_period, freq_spacing
         
     def window_filter(self, filtertype:str, data:None, size:None):
         '''
@@ -136,7 +136,9 @@ class Soundspectre():
         '''
         Take the FFT of the windowed signal.
         If sample_length is provided, fft frequencies are generated based on this length
-
+        fftfreq : for a sampled signal of length NT having period T, 
+        DFT makes a period reptition of this signal ie (x.dirac comb) * dirac comb
+        so in time, signal is periodic in nT, the frequency is w_k = kw_N = k*2pi/NT
         Parameters
         ----------
         window_data : TYPE
@@ -159,12 +161,12 @@ class Soundspectre():
         '''
         #frequency grid
         if self.audio_samples == len(window_data):
-            self.frequency_components = np.fft.fftshift(np.fft.fftfreq(self.audio_samples, self.time_spacing))
+            self.frequency_components = np.fft.fftshift(np.fft.fftfreq(self.audio_samples, self.time_period))
             self.data_fft = np.fft.fftshift(np.fft.fft(window_data))
             
         else:
             if sample_length is not None:
-                self.frequency_components = np.fft.fftshift(np.fft.fftfreq(sample_length, self.time_spacing))
+                self.frequency_components = np.fft.fftshift(np.fft.fftfreq(sample_length, self.time_period))
                 self.data_fft = np.fft.fftshift(np.fft.fft(window_data))
  
             else: 
@@ -250,7 +252,7 @@ class Soundspectre():
         In order to plot correlation, we need the delays between the two signals
         If there are 2N-1 points for each signal, the delay will be measured across those points.
         Delay between two points in time is given by an amount that depends on sample rate
-        It is points*time_spacing
+        It is points*time_period
 
         Parameters
         ----------
