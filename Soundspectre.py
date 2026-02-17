@@ -2,6 +2,9 @@
 """
 Created on Fri Feb 13 10:21:42 2026
 
+This script gives a spectrum and a spectrogram of your audio in tested formats mp3 or flac
+It can also look for the similarity between two audios to see the degree of resemblance
+between the two in time.  
 @author: SM
 """
 import os
@@ -12,6 +15,19 @@ from scipy.signal import spectrogram
 
 class Soundspectre():
     def __init__(self, audiofile):
+        '''
+        audiofile with format as a string.
+        It is loaded and a windowing filter is applied for further treatment.
+        Parameters
+        ----------
+        audiofile : str
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        '''
         self.audiofile = audiofile
         self.data, self.orig_samplerate = self.load_audio()
         (
@@ -23,6 +39,20 @@ class Soundspectre():
         self.window_data = self.window_filter('hanning', self.data,None)
         
     def load_audio(self):
+        '''
+        Loadfile gets audio from the current directory.
+        If the directory is different should change for it.
+        The loadfile function can handle audio input in another format, which it 
+        will convert to string.
+
+        Returns
+        -------
+        audiosourcedata : 
+            it is audio data.
+        sample_rate : TYPE
+            rate at which, the audio is sampled.
+
+        '''
         if type(self.audiofile) is str:
             self.filename = self.audiofile.strip().split('.')[0]
             audiostring = self.audiofile
@@ -38,6 +68,21 @@ class Soundspectre():
         return audiosourcedata, sample_rate
     
     def fourier_params(self):
+        '''
+        Extract different useful parameters
+
+        Returns
+        -------
+        audio_samplelength : int
+            Length of audio data
+        audio_duration : 
+            Length of signal in seconds
+        time_spacing : TYPE
+            the spacing between sampled points in time
+        freq_spacing : TYPE
+            the frequency resolution possible 
+
+        '''
         audio_samplelength = len(self.data)
         audio_duration = audio_samplelength/self.orig_samplerate
         time_spacing = audio_duration/audio_samplelength
@@ -46,6 +91,24 @@ class Soundspectre():
         return audio_samplelength, audio_duration, time_spacing, freq_spacing
         
     def window_filter(self, filtertype:str, data:None, size:None):
+        '''
+        Time windowing a signal to minimize oscillations or artifacts.
+        Either pass the data or datasize to create filter specified
+        Parameters
+        ----------
+        filtertype : str
+            DESCRIPTION.
+        data : None
+            DESCRIPTION.
+        size : None
+            DESCRIPTION.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        '''
         filters = True
         while filters:
             if filtertype == 'hanning':
@@ -70,7 +133,30 @@ class Soundspectre():
             return filterarr
         
     def fft_spectra(self, window_data,sample_length:None):  
+        '''
+        Take the FFT of the windowed signal.
+        If sample_length is provided, fft frequencies are generated based on this length
 
+        Parameters
+        ----------
+        window_data : TYPE
+            DESCRIPTION.
+        sample_length : None
+            DESCRIPTION.
+
+        Raises
+        ------
+        Exception
+            DESCRIPTION.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+        TYPE
+            DESCRIPTION.
+
+        '''
         #frequency grid
         if self.audio_samples == len(window_data):
             self.frequency_components = np.fft.fftshift(np.fft.fftfreq(self.audio_samples, self.time_spacing))
@@ -87,7 +173,14 @@ class Soundspectre():
         return self.data_fft, self.frequency_components
     
     def scipyspectrogram(self):
-   
+        '''
+        Generate a spectrogram using scipy module
+
+        Returns
+        -------
+        None.
+
+        '''
         f, t, S = spectrogram(
              np.array(self.data),
              44000,
@@ -110,20 +203,82 @@ class Soundspectre():
         plt.show()
         
     def zero_padded_data(self, sample_length:int ):
+        '''
+        When two signals are involved such as for cross-correlation
+        Zeropad the signals to avoid effects coming due to wrapping effects ie 
+        direct FT/FFT is a circular transform. 0, 1...-1
+
+        Parameters
+        ----------
+        sample_length : int
+            DESCRIPTION.
+
+        Returns
+        -------
+        data_zeropad : TYPE
+            DESCRIPTION.
+
+        '''
         data_zeropad = np.zeros(sample_length)
         data_zeropad[0:self.audio_samples] = self.window_data
         return data_zeropad
         
     def crosscorrelation(self, S1fft, S2fft):
+        '''
+        Take FFTs of two signals as input. 
+        FT(correlation) = FT1.FT2
+        FT of a correlation is a product of FTs of each signal
+        Parameters
+        ----------
+        S1fft : TYPE
+            DESCRIPTION.
+        S2fft : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        '''
         cross_cor = np.real(np.fft.ifft(np.fft.ifftshift(S1fft*np.conj(S2fft))))
         self.xcorr = np.fft.fftshift(cross_cor)
         return self.xcorr
     
     def xcorr_lag(self,sample_1size, sample_2size):
+        '''
+        In order to plot correlation, we need the delays between the two signals
+        If there are 2N-1 points for each signal, the delay will be measured across those points.
+        Delay between two points in time is given by an amount that depends on sample rate
+        It is points*time_spacing
+
+        Parameters
+        ----------
+        sample_1size : TYPE
+            DESCRIPTION.
+        sample_2size : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        '''
         self.lag = np.arange(-(sample_2size-1), sample_1size) 
         self.lag_seconds = self.lag/self.orig_samplerate
         
     def spectrogram(self):
+        '''
+        A manual spectrogram to compare with scipy.
+        Spectrum of a window is taken and added into a list.
+        To have a continuous data, the window is slided by slidepoints.
+        Inorder to have y axis as spectrum for x axis time, list is inverted.
+
+        Returns
+        -------
+        None.
+
+        '''
         nfft_windowsize = 2048
         fftslidepoints = 512
         spectrogram_list = []
