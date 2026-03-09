@@ -9,6 +9,6 @@ Tested formats: .mp3, .flac
 - os, numpy, matplotlib, librosa, scipy
 
 ### Implementation
-- Soundspectre is a class method that takes as an input of the form filename.format of an audio file as a string
+- Soundspectre is a class method that takes an input of the form filename.format of an audio file as a string
 - The class method contains functions that allow to take FFT spectrum of the signal, spectrogram and crosscorrelation
 - Output is generated as .png files and saved in the same folder as the script
