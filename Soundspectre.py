@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Feb 13 10:21:42 2026
+
 This script gives a spectrum and a spectrogram of your audio in tested formats mp3 or flac
 It can also look for the similarity between two audios to see the degree of resemblance
 between the two in time.  
@@ -348,7 +349,8 @@ class Soundspectre():
             plt.title("Cross-Correlation")
             plt.grid(True)
             plt.show()
-             
+            plt.savefig(f'{self.filename} correlation.png')  
+44            
 if __name__=='__main__':
     score1 = 'Howard Shore - Wedding Plans.flac'
     myscore1 = Soundspectre(score1)
